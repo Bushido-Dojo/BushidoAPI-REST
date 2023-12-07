@@ -21,8 +21,8 @@ app.use((req, res, next) => {
   });
   
 
-app.post('/cadastro', alunosCadastroRouter);
-app.post('/login',alunosLoginRouter );
+app.use('/cadastro', alunosCadastroRouter);
+app.use('/login',alunosLoginRouter );
 
 
 app.listen(8080, () => {
