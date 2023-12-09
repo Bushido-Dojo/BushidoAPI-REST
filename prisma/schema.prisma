@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model ADM {
+  Id_Adm   Int    @id(map: "PK__ADM__51977C4F7C792D05") @default(autoincrement())
+  username String @db.VarChar(20)
+  cpf      String @db.Char(14)
+  senha    String @db.VarChar(20)
+}
+
+model Aluno {
+  Id_Aluno        Int         @id(map: "PK_Aluno") @default(autoincrement())
+  Id_Faixa        Int
+  Nome            String      @db.VarChar(50)
+  Sobrenome       String      @db.VarChar(50)
+  CPF             String      @db.Char(14)
+  EMail           String      @db.VarChar(50)
+  Celular         String      @db.Char(14)
+  Data_Nascimento DateTime    @db.Date
+  Banido          String      @db.Char(1)
+  senha           String      @db.VarChar(150)
+  Faixa           Faixa       @relation(fields: [Id_Faixa], references: [Id_Faixa], onUpdate: NoAction, map: "FK_Faixa_Aluno")
+  Matricula       Matricula[]
+  Pagamento       Pagamento[]
+}
+
+model Faixa {
+  Id_Faixa Int     @id(map: "PK__Faixa__74FD73D1049B2A35")
+  Cor      String? @db.VarChar(50)
+  Turma    String? @db.VarChar(1)
+  Aluno    Aluno[]
+  Turmas   Turmas? @relation(fields: [Turma], references: [turma], onDelete: NoAction, onUpdate: NoAction, map: "FK__Faixa__Turma__22951AFD")
+}
+
+model HorariosAula {
+  Id_Horario    Int        @id(map: "PK__Horarios__AD7A4DD39B1A7E1A") @default(autoincrement())
+  Id_Prof       Int?
+  HorarioInicio DateTime?  @db.Time
+  diaSemana     String?    @db.VarChar(13)
+  Turma         String?    @db.VarChar(1)
+  Turmas        Turmas?    @relation(fields: [Turma], references: [turma], onDelete: NoAction, onUpdate: NoAction, map: "FK__HorariosA__Turma__2665ABE1")
+  Professor     Professor? @relation(fields: [Id_Prof], references: [Id_Prof], onDelete: NoAction, onUpdate: NoAction, map: "FK_Prof_Horario")
+}
+
+model Matricula {
+  ultimoPgto    DateTime? @db.Date
+  proxPgto      DateTime? @db.Date
+  Id_Matricula  Int       @id(map: "PK__Matrícul__40336132A2283751") @default(autoincrement())
+  dataMatricula DateTime  @db.Date
+  Id_Aluno      Int
+  Aluno         Aluno     @relation(fields: [Id_Aluno], references: [Id_Aluno], onUpdate: NoAction, map: "FK__Matricula__Id_Al__34B3CB38")
+}
+
+model Pagamento {
+  valorPago Float    @db.Money
+  CodPgto   Int      @id(map: "PK__Pagament__7FF7F8A2CD15F83D") @default(autoincrement())
+  dataPgto  DateTime @db.Date
+  Id_Aluno  Int
+  Aluno     Aluno    @relation(fields: [Id_Aluno], references: [Id_Aluno], onUpdate: NoAction, map: "FK__Pagamento__Id_Al__33BFA6FF")
+}
+
+model Professor {
+  Id_Prof      Int            @id(map: "PK__Professo__3A592AD1F2A3FE2A") @default(autoincrement())
+  nome         String         @db.VarChar(20)
+  sobrenome    String         @db.VarChar(20)
+  CPF          String         @db.Char(14)
+  sexo         String         @db.Char(1)
+  telefone     String         @db.Char(14)
+  dataCadastro DateTime       @db.Date
+  HorariosAula HorariosAula[]
+}
+
+model Turmas {
+  turma        String         @id(map: "PK__Turmas__179BA973ADF6F8C3") @db.VarChar(1)
+  Faixa        Faixa[]
+  HorariosAula HorariosAula[]
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model ValorPgto {
+  valorParcela Float? @db.Money
+  valorMulta   Float? @db.Money
+
+  @@ignore
+}
