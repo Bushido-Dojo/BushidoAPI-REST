@@ -1,11 +1,11 @@
 import jwt, { JwtPayload } from 'jsonwebtoken';
 
-interface TokenPayload extends JwtPayload {
+interface TokenPayload{
   Id_Aluno: number;
   email: string;
 }
 
-const segredo = 'jfsc13122006'; // Defina sua chave secreta
+const segredo = 'jfsc13122006';
 
 export const criarToken = (Id_Aluno: number, email: string): string => {
   const TokenPayload: TokenPayload = { Id_Aluno, email };
@@ -20,6 +20,6 @@ export const verificarToken = (token: string): TokenPayload | null => {
     return decoded;
   } catch (error) {
     console.error('Erro na verificação do token:', error);
-    return null; // Retorna null para indicar falha na verificação
+    return null; 
   }
 };

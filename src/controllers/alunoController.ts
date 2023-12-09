@@ -137,7 +137,7 @@ export const controlerAluno = {
       if(!aluno){
         return res.status(500).json({
           status:500,
-          message:"Usuario não encontrado"
+          message:"Usuario não existe"
         });
       }
       const senhaCorreta = await comparePWD(senha,aluno.senha)
