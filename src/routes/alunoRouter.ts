@@ -13,3 +13,15 @@ alunoRouter.post("/login", async (req,res) =>{
 alunoRouter.get("/dashboard/:token",async (req,res)=>{{
     await controlerAluno.dashboard(req,res);
 }})
+
+alunoRouter.get("/dashboard/matricula/:token", async (req,res) =>{{
+    await controlerAluno.matricula(req,res);
+}})
+
+alunoRouter.get("/dashboard/matricular/:token", async(req,res)=>{{
+    await controlerAluno.matricular(req,res);
+}} )
+
+alunoRouter.get("/dashboard/delete-conta/:token", async(req,res)=>{{
+    await controlerAluno.apagarconta(req,res);
+}})

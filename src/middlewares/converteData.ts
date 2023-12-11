@@ -25,3 +25,11 @@ export function converteDataFormato(data: string): string | null {
     return dataSQL;
   }
   
+
+export function converteIso8601(dataISO:Date){
+    const day = dataISO.getUTCDate().toString().padStart(2, '0');
+    const month = (dataISO.getUTCMonth() + 1).toString().padStart(2, '0');
+    const year = dataISO.getUTCFullYear();
+
+    return `${day}/${month}/${year}`;
+}

@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { encryptPWD ,comparePWD} from '../middlewares/encrypt';
-import { converteDataFormato } from '../middlewares/converteData';
+import { converteDataFormato,converteIso8601 } from '../middlewares/converteData';
 import { Request, Response } from 'express-serve-static-core';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { criarToken, verificarToken } from '../middlewares/jwt';
@@ -210,7 +210,6 @@ export const controlerAluno = {
         else{
           matriculado = "Não"
         }
-        console.log(matriculado)
 
         return res.status(200).json({
           status:200,
@@ -227,6 +226,159 @@ export const controlerAluno = {
       }
     }
 
+  }
+  ,matricula: async(req:Request, res:Response) =>{
+    const {token} = req.params;
+    
+    if(!token){
+      return res.status(500).json({
+        status:500,
+        message:"Erro ao obter token."
+      })
+    }
+
+    const tokenDescriptografado = verificarToken(token);
+    let IdAluno;
+    let email;
+    if(tokenDescriptografado){
+      IdAluno = tokenDescriptografado.Id_Aluno;
+      email = tokenDescriptografado.email;
+    }
+    else{
+      return res.status(500).json({
+        status:500,
+        message:"Falha ao Descriptografar token"
+      })
+    }
+
+    const matricula = await prisma.$queryRaw`select * from Karate.viewMatriculas where id_aluno = ${IdAluno}`;
+    
+    if (Array.isArray(matricula) && matricula.length>0) {
+      const primeiroResultado = matricula[0];
+    
+      const nomeCompleto = primeiroResultado.nomeCompleto;
+      const dataMatriculaSQL = primeiroResultado.dataMatricula;
+      const ultimoPgtoSQL = primeiroResultado.ultimoPgto;
+      const vencimentoParcelaSQL = primeiroResultado.VencimentoParcela;
+      const matriculaAtrasada = primeiroResultado.MatriculaAtrasada;
+      const ultimoPgto = converteIso8601(ultimoPgtoSQL);
+      const dataMatricula = converteIso8601(dataMatriculaSQL);
+      const vencimentoParcela = converteIso8601(vencimentoParcelaSQL);
+      
+      return res.status(200).json({
+        status:200,
+        message:"Aluno Matriculado",
+        ultimoPgto,
+        dataMatricula,
+        nomeCompleto,
+        matriculaAtrasada,
+        vencimentoParcela,
+      })
+    
+    }
+    else{
+      return res.status(400).json({
+        message:"Não matriculado",
+        matriculado:"Não"
+      })
+    }
+    
+  }
+  ,matricular: async(req:Request, res:Response)=>{
+    const {token} = req.params;
+    
+    if(!token){
+      return res.status(500).json({
+        status:500,
+        message:"Erro ao obter token."
+      })
+    }
+
+    const tokenDescriptografado = verificarToken(token);
+    let IdAluno;
+    let email;
+    if(tokenDescriptografado){
+      IdAluno = tokenDescriptografado.Id_Aluno;
+      email = tokenDescriptografado.email;
+    }
+    else{
+      return res.status(500).json({
+        status:500,
+        message:"Falha ao Descriptografar token"
+      })
+    }
+    const hoje = new Date();
+    const proximoPagamento = new Date();
+    proximoPagamento.setDate(hoje.getDate() + 30);
+
+    const dadosMatricula = {
+      ultimoPgto: hoje,
+      proxPgto: proximoPagamento,
+      dataMatricula: hoje,
+      Id_Aluno: IdAluno,
+    }
+
+    const matricula = await prisma.matricula.create({
+      data:
+      dadosMatricula
+    })
+
+    if(matricula){
+      return res.status(200).json({
+        status:200,
+        message:"Matricula Realizada com Sucesso"
+      })
+    }
+    else{
+      return res.status(500).json({
+        status:500,
+        message:"Falha em Matricular Aluno"
+      })
+    }
+  }
+  ,apagarconta: async(req:Request,res:Response)=>{
+    const {token} = req.params;
+
+    if(!token){
+      return res.status(500).json({
+        status:500,
+        message:"Erro ao obter token."
+      })
+    }
+
+    const tokenDescriptografado = verificarToken(token);
+    let IdAluno;
+    let email;
+    if(tokenDescriptografado){
+      IdAluno = tokenDescriptografado.Id_Aluno;
+      email = tokenDescriptografado.email;
+    }
+    else{
+      return res.status(500).json({
+        status:500,
+        message:"Falha ao Descriptografar token"
+      })
+    }
+
+    const resposta = await prisma.aluno.delete({
+      where:{
+        Id_Aluno:IdAluno,
+      }
+    })
+
+    if(resposta){
+      return res.status(200).json({
+        status:200,
+        message:"Conta apagada com sucesso!"
+      })
+    }
+    else{
+      return res.status(500).json({
+        status:500,
+        message:"Erro ao tentar deletar conta"
+      })
+    }
+      
   }
 
 };
