@@ -3,7 +3,8 @@ import { encryptPWD ,comparePWD} from '../middlewares/encrypt';
 import { converteDataFormato,converteIso8601 } from '../middlewares/converteData';
 import { Request, Response } from 'express-serve-static-core';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { criarToken, verificarToken } from '../middlewares/jwt';
+import { criarToken, verificarToken,criarTokenRedefinicaoSenha } from '../middlewares/jwt';
+import { enviarEmail } from '../middlewares/email';
 
 const prisma = new PrismaClient();
 
@@ -380,5 +381,132 @@ export const controlerAluno = {
     }
       
   }
+  ,esqueciSenha: async (req:Request,res:Response) => {
+    const {email} = req.body;
 
-};
+    if(!email){
+      return res.status(500).json({
+        status:500,
+        message:"Por favor forneça um email."
+      });
+    }
+
+    try{
+      const aluno = await prisma.aluno.findFirst({
+        where: {
+          EMail:email,
+        }
+      });
+
+      if(!aluno){
+        return res.status(500).json({
+          status: 500,
+          message: "Usuário não encontrado para este email.",
+        });
+      }
+
+      const tokenRedefinicaoSenha = criarTokenRedefinicaoSenha(email);
+
+      const emailEnviado = await enviarEmail(email,tokenRedefinicaoSenha)
+
+      if (emailEnviado) {
+        console.log('E-mail enviado com sucesso!');
+        return res.status(200).json({
+          status: 200,
+          message: "E-mail enviado com sucesso.",
+        });
+      } else {
+        console.log('Houve um erro ao enviar o e-mail.');
+        return res.status(500).json({
+          status: 500,
+          message: "Erro ao enviar o e-mail.",
+        });
+      }
+    }
+    catch(err){
+      return res.status(500).json({
+        status:500,
+        message:"Deu erro.",
+        err,
+      })
+    }
+  }
+  ,redefinirsenha: async (req:Request, res:Response)=>{
+    const {token} = req.params;
+    const {senha,confirmesenha} = req.body;
+
+    if(!token){
+      return res.status(500).json({
+        status:500,
+        message:"Falha ao receber Token"
+      })
+    }
+    const tokenDescriptografado = verificarToken(token);
+
+    if(!tokenDescriptografado){
+      return res.status(500).json({
+        status:500,
+        message:"Token inválido."
+      })
+    }
+    console.log(tokenDescriptografado);
+
+    const email = tokenDescriptografado.email;
+
+    const aluno = await prisma.aluno.findFirst({
+      where: {
+        EMail:email,
+      }
+    });
+
+    if(!aluno){
+      return res.status(500).json({
+        status:500,
+        message:"Aluno não existente."
+      })
+    }
+    
+    if(!senha||!confirmesenha){
+      return res.status(500).json({
+        status:500,
+        message:"Insira sua nova senha e sua confirmação."
+      })
+    }
+
+    if(senha != confirmesenha){
+      return res.status(500).json({
+        status:500,
+        message:"As senhas diferem."
+      })
+    }
+
+    const senhaCriptografada = encryptPWD(senha);
+
+    try{
+      const atualizasenha = await prisma.aluno.update({
+        where:{
+          Id_Aluno: aluno.Id_Aluno
+        },
+        data:{
+          senha:senhaCriptografada
+        }
+      })
+
+      if(!atualizasenha){
+        return res.status(500).json({
+          status:500,
+          message:"Falha ao atualizar nova senha"
+        })
+      }
+      else{
+        return res.status(200).json({
+          status:200,
+          message:"Senha Atualizada com sucesso"
+        })
+      }
+    }
+    catch (error) {
+      console.error('Erro ao atualizar usuário:', error)
+    }
+  }
+}

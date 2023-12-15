@@ -25,3 +25,11 @@ alunoRouter.get("/dashboard/matricular/:token", async(req,res)=>{{
 alunoRouter.get("/dashboard/delete-conta/:token", async(req,res)=>{{
     await controlerAluno.apagarconta(req,res);
 }})
+
+alunoRouter.post("/esquecisenha",async(req,res)=>{
+    await controlerAluno.esqueciSenha(req,res);
+})
+
+alunoRouter.post("/redefinirsenha/:token",async(req,res)=>{
+    await controlerAluno.redefinirsenha(req,res);
+})

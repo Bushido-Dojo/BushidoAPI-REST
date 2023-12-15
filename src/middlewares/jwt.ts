@@ -12,7 +12,7 @@ export const criarToken = (Id_Aluno: number, email: string): string => {
 
   const token = jwt.sign(TokenPayload, segredo);
   return token;
-};
+};  
 
 export const verificarToken = (token: string): TokenPayload | null => {
   try {
@@ -22,4 +22,17 @@ export const verificarToken = (token: string): TokenPayload | null => {
     console.error('Erro na verificação do token:', error);
     return null; 
   }
+};
+export const criarTokenRedefinicaoSenha = (email: string): string => {
+  const payload = {
+    email,
+    tipo: 'redefinicaoSenha',
+  };
+
+  const opcoesToken = {
+    expiresIn: '1h',
+  };
+
+  const token = jwt.sign(payload, segredo, opcoesToken);
+  return token;
 };
