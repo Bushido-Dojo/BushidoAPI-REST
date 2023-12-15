@@ -6,8 +6,8 @@ export async function enviarEmail(emailDestino:string, tokenRedefinicaoSenha:str
     port: 587,
     secure: false,
     auth: {
-      user: 'joaocoromberk@gmail.com',
-      pass: 'Mfdoom13!',
+      user: 'zzzz',
+      pass: 'zzz',
     },
   });
 
